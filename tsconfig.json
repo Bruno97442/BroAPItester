@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "ES2016",
+        "pretty": true,
+        "watch": true,
+        "outDir": "./build"
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "files": [
+        "app/index.ts"
+    ]
+}
