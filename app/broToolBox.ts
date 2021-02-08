@@ -1,3 +1,5 @@
+// brotoolBox 1.0
+
 /**
  * queryselector(All) both
  * @param {string} CsSelector
