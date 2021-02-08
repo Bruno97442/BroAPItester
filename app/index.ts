@@ -1,53 +1,56 @@
-import { ael, _ } from "./broToolBox.js";
+import { addClass, ael, rmClass, _ } from "./broToolBox.js";
 import { broPost, shower } from "./fetching.js";
 
-const urlInput = _('input#url')
-const url = (urlEnding: string) => _('input#url').value + urlEnding
+const configForm: HTMLFormElement = _('#config'),
+    getUrl = () => _('#url').value,
+    submitBtn: HTMLButtonElement = _('.brosubmit'),
+    showingPlace: HTMLElement = _('.showingPlace'),
+    reqBody: HTMLElement = _('.reqBody'),
+    fetchConfig: RequestInit = {},
+    loading: HTMLParagraphElement = _('.loading'),
 
-_('a.brolink').forEach((link: HTMLElement) => {
-    ael('click', link, (e: Event) => {
-        e.preventDefault()
-        fetch(url(link.getAttribute('href')))
-            .then(resp => resp.json())
-            .then(shower)
-            .catch(shower)
-
-    })
-});
-_('form').forEach((form: HTMLFormElement) => {
-    // console.log(url(form.getAttribute('action')))
-    if (form.method === "get") {
-        
-        ael('submit', form, function (e: Event) {
-            e.preventDefault()
-            fetch(url(this.getAttribute('action')), { method: this.method })
+    isActivInsert = () => fetchConfig.method === "POST" || fetchConfig.method === "PUT",
+    buildConfig = () => {
+        let form: HTMLFormElement = this
+        _('select[name]', form).forEach((select: HTMLSelectElement) => {
+            select.name === "headers"
+                ? fetchConfig.headers = { 'content-Type': select.value }
+                : fetchConfig[select.name] = select.value
         })
-        return
+        if (isActivInsert()) {
+            addClass('appear', reqBody)
+            addClass('giveSpace', showingPlace)
+        } else {
+            rmClass('appear', reqBody)
+            rmClass('giveSpace', showingPlace)
+        }
+    },
+    fetching = () => {
+        rmClass('d-none', loading)
+        fetchConfig.body = isActivInsert()
+            ? _('.reqBodyJson').innerText.trim()
+            : null
+        broPost(getUrl(), fetchConfig)
+            .then(resp => {
+                addClass('d-none', loading)
+                shower(resp)
+            })
+            .catch(err => {
+                addClass('d-none', loading)
+                shower(err)
+            })
     }
-    ael('submit', form, function (e) {
-        e.preventDefault()
-        const data = new FormData(this)
 
-        broPost(url(this.getAttribute('action')), data, this.method).then(console.log)
-            .catch(shower)
-    });
+// init
+buildConfig()
 
+ael('change', configForm, buildConfig.bind(configForm))
+
+ael('click', submitBtn, fetching)
+
+ael('keydown', document.documentElement, (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !document.activeElement.classList.contains("reqBodyJson")) {
+        fetching()
+    }
 })
 
-// gerer modifier
-ael("click", _('.btn-light'), e => {
-
-})
-
-// URL auto binding j'affiche dans les modals l'adress d'entête
-const urlSpans = _('[data-binding="input#url"]')
-ael('keyup', urlInput, function (e) {
-    urlSpans.forEach((span: HTMLSpanElement) => {
-        span.innerHTML = this.value
-    })
-});
-
-// urlEnd pour chaque btn d'action
-const urlEndSpan = _('span[name=urlend]')
-
-console.log(_('form[name=findbyid] [name=_id]').form)
